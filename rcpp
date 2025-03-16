@@ -1,17 +1,22 @@
 #!/bin/bash
 
+# Function to extract GCC version
+get_gcc_version() {
+    g++ --version | head -n 1 | awk '{print $4}'
+}
+
 # Function to display compiler information
 show_compiler_info() {
-    echo "🔧 Compiler Information:"
-    g++ --version | head -n 1
-    echo "📋 C++ Standard: C++20"
-    echo "🚩 Compiler Flags: -std=c++20 -Wall -Wextra"
+    echo "🔧    Compiler GCC:"
+    echo "🛠️     GCC Version: $(get_gcc_version)"
+    echo "📋    C++ Standard Version: C++20"
+    echo "🚩    Compiler Flags: -std=c++20 -Wall -Wextra"
     echo
 }
 
 # Check if a file is provided
 if [ -z "$1" ]; then
-    echo "Usage: $0 <cpp_file>"
+    echo "Usage: $0 <cpp_file> [options]"
     exit 1
 fi
 
@@ -24,20 +29,33 @@ if [ ! -f "$1" ]; then
     exit 1
 fi
 
+# Enable verbose mode if specified
+if [ "$2" == "--verbose" ]; then
+    set -x  # Enable command tracing
+fi
+
 # Show compiler information
 show_compiler_info
 
-# Compile the program
-echo "📦 Compiling $1 with C++20 using RCPP..."
-g++ -std=c++20 -Wall -Wextra -o "$filename" "$1"
+# Compile the program with or without debug flags
+if [ "$2" == "--debug" ]; then
+    echo "🐞    Debug mode enabled!"
+    g++ -std=c++20 -Wall -Wextra -g -o "$filename" "$1"
+else
+    g++ -std=c++20 -Wall -Wextra -o "$filename" "$1"
+fi
 
 # Check if compilation was successful
 if [ $? -eq 0 ]; then
-    echo "✅ Compilation successful!"
-    echo "🚀 Running $filename..."
+    echo "✅    Compilation successful!"
+    echo "🚀    Running $filename..."
     echo "-----------------------------"
     ./"$filename"
 else
-    echo "❌ Compilation failed!"
+    echo "❌    Compilation failed!"
     exit 1
 fi
+
+# Clean up binary (default behavior)
+echo "🧹    Cleaning up..."
+rm "$filename"
