@@ -34,6 +34,11 @@ select_file() {
 
     gum style --foreground 33 "📂 Select a file to compile:"
     selected_file=$(gum choose "${files[@]}")
+    if [ -z "$selected_file" ]; then
+        gum style --foreground 196 "❌ No file selected. Exiting."
+        exit 1
+    fi
+
     echo "$selected_file"
 }
 
