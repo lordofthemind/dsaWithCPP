@@ -30,7 +30,7 @@ if [ ! -f "$1" ]; then
 fi
 
 # Enable verbose mode if specified
-if [ "$2" == "--verbose" ]; then
+if [[ " $* " == *" --verbose "* ]]; then
     set -x  # Enable command tracing
 fi
 
@@ -38,7 +38,7 @@ fi
 show_compiler_info
 
 # Compile the program with or without debug flags
-if [ "$2" == "--debug" ]; then
+if [[ " $* " == *" --debug "* ]]; then
     echo "🐞    Debug mode enabled!"
     g++ -std=c++20 -Wall -Wextra -g -o "$filename" "$1"
 else
@@ -56,6 +56,8 @@ else
     exit 1
 fi
 
-# Clean up binary (default behavior)
-echo "🧹    Cleaning up..."
-rm "$filename"
+# Skip cleaning if --no-clean is passed
+if [[ " $* " != *" --no-clean "* ]]; then
+    echo "🧹    Cleaning up..."
+    rm "$filename"
+fi
