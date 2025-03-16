@@ -7,17 +7,17 @@ get_gcc_version() {
 
 # Default settings
 cpp_standard="c++20"  # Default C++ standard version
-debug_mode=false       # Debug mode disabled by default
-verbose_mode=false     # Verbose mode disabled by default
-no_clean=false         # Cleanup enabled by default
+debug_mode=false      # Debug mode disabled by default
+verbose_mode=false    # Verbose mode disabled by default
+no_clean=false        # Cleanup enabled by default
 
 # Function to display compiler information
 show_compiler_info() {
     echo "------------------------------------------------------------"
-    echo "🔧    Compiler GCC:"
-    echo "🛠️     GCC Version: $(get_gcc_version)"
-    echo "📋    C++ Standard Version: $cpp_standard"
-    echo "🚩    Compiler Flags: -std=$cpp_standard -Wall -Wextra"
+    gum style --foreground 39 "🔧    Compiler GCC:"
+    gum style --foreground 45 "🛠️     GCC Version: $(get_gcc_version)"
+    gum style --foreground 51 "📋    C++ Standard Version: $cpp_standard"
+    gum style --foreground 87 "🚩    Compiler Flags: -std=$cpp_standard -Wall -Wextra"
     echo "------------------------------------------------------------"
 }
 
@@ -30,7 +30,7 @@ while [[ $# -gt 0 ]]; do
                 cpp_standard="$2"
                 shift 2  # Move past the argument
             else
-                echo "❌ Error: Invalid C++ standard. Use 'c++17' or 'c++20'."
+                gum style --foreground 196 "❌ Error: Invalid C++ standard. Use 'c++17' or 'c++20'."
                 exit 1
             fi
             ;;
@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
                 cpp_file="$1"
                 shift
             else
-                echo "❌ Error: Unrecognized option '$1'."
+                gum style --foreground 196 "❌ Error: Unrecognized option '$1'."
                 exit 1
             fi
             ;;
@@ -55,7 +55,7 @@ done
 
 # Ensure a C++ source file is provided
 if [ -z "$cpp_file" ]; then
-    echo "❌ Usage: $0 <cpp_file> [-s c++17|c++20] [-d] [-v] [-n]"
+    gum style --foreground 202 "❌ Usage: $0 <cpp_file> [-s c++17|c++20] [-d] [-v] [-n]"
     exit 1
 fi
 
@@ -64,7 +64,7 @@ filename=$(basename "$cpp_file" .cpp)
 
 # Check if the source file exists
 if [ ! -f "$cpp_file" ]; then
-    echo "❌ Error: File '$cpp_file' not found!"
+    gum style --foreground 196 "❌ Error: File '$cpp_file' not found!"
     exit 1
 fi
 
@@ -78,7 +78,7 @@ show_compiler_info
 
 # Compile the program with appropriate flags
 if [ "$debug_mode" = true ]; then
-    echo "🐞 Debug mode enabled!"
+    gum style --foreground 208 "🐞 Debug mode enabled!"
     g++ -std=$cpp_standard -Wall -Wextra -g -o "$filename" "$cpp_file"
 else
     g++ -std=$cpp_standard -Wall -Wextra -o "$filename" "$cpp_file"
@@ -86,18 +86,18 @@ fi
 
 # Check if compilation was successful
 if [ $? -eq 0 ]; then
-    echo "✅ Compilation successful!"
-    echo "🚀 Running $filename..."
+    gum style --foreground 46 "✅ Compilation successful!"
+    gum style --foreground 27 "🚀 Running $filename..."
     echo "------------------------------------------------------------"
     ./"$filename"
     echo "------------------------------------------------------------"
 else
-    echo "❌ Compilation failed!"
+    gum style --foreground 196 "❌ Compilation failed!"
     exit 1
 fi
 
 # Clean up the compiled file unless -n is passed
 if [ "$no_clean" = false ]; then
-    echo "🧹 Cleaning up..."
+    gum style --foreground 105 "🧹 Cleaning up..."
     rm "$filename"
 fi
