@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Function to display compiler information
+show_compiler_info() {
+    echo "🔧 Compiler Information:"
+    g++ --version | head -n 1
+    echo "📋 C++ Standard: C++20"
+    echo "🚩 Compiler Flags: -std=c++20 -Wall -Wextra"
+    echo
+}
+
 # Check if a file is provided
 if [ -z "$1" ]; then
     echo "Usage: $0 <cpp_file>"
@@ -15,15 +24,20 @@ if [ ! -f "$1" ]; then
     exit 1
 fi
 
+# Show compiler information
+show_compiler_info
+
 # Compile the program
-echo "Compiling $1..."
+echo "📦 Compiling $1 with C++20 using RCPP..."
 g++ -std=c++20 -Wall -Wextra -o "$filename" "$1"
 
 # Check if compilation was successful
 if [ $? -eq 0 ]; then
-    echo "Compilation successful! Running $filename..."
+    echo "✅ Compilation successful!"
+    echo "🚀 Running $filename..."
+    echo "-----------------------------"
     ./"$filename"
 else
-    echo "Compilation failed!"
+    echo "❌ Compilation failed!"
     exit 1
 fi
