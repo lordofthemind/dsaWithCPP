@@ -5,69 +5,94 @@ get_gcc_version() {
     g++ --version | head -n 1 | awk '{print $4}'
 }
 
-# Default C++ standard
-cpp_standard="C++20"
-cpp_flag="-std=c++20"
-
-# Check if --std=c++17 flag is passed
-if [[ " $* " == *" --cpp17 "* ]]; then
-    cpp_standard="C++17"
-    cpp_flag="-std=c++17"
-fi
+# Default settings
+cpp_standard="c++20"  # Default C++ standard
+debug_mode=false
+verbose_mode=false
+no_clean=false
 
 # Function to display compiler information
 show_compiler_info() {
+    echo "------------------------------------------------------------"
     echo "🔧    Compiler GCC:"
     echo "🛠️     GCC Version: $(get_gcc_version)"
     echo "📋    C++ Standard Version: $cpp_standard"
-    echo "🚩    Compiler Flags: $cpp_flag -Wall -Wextra"
-    echo
+    echo "🚩    Compiler Flags: -std=$cpp_standard -Wall -Wextra"
+    echo "------------------------------------------------------------"
 }
 
+# Parse command-line options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -s)
+            if [[ "$2" == "c++17" || "$2" == "c++20" ]]; then
+                cpp_standard="$2"
+                shift 2
+            else
+                echo "❌ Error: Invalid C++ standard. Use 'c++17' or 'c++20'."
+                exit 1
+            fi
+            ;;
+        -d) debug_mode=true; shift ;;
+        -v) verbose_mode=true; shift ;;
+        -n) no_clean=true; shift ;;
+        *)
+            if [[ -z "$cpp_file" ]]; then
+                cpp_file="$1"
+                shift
+            else
+                echo "❌ Error: Unrecognized option '$1'."
+                exit 1
+            fi
+            ;;
+    esac
+done
+
 # Check if a file is provided
-if [ -z "$1" ]; then
-    echo "Usage: $0 <cpp_file> [options]"
+if [ -z "$cpp_file" ]; then
+    echo "❌ Usage: $0 <cpp_file> [-s c++17|c++20] [-d] [-v] [-n]"
     exit 1
 fi
 
 # Extract the file name without extension
-filename=$(basename "$1" .cpp)
+filename=$(basename "$cpp_file" .cpp)
 
 # Check if the file exists
-if [ ! -f "$1" ]; then
-    echo "Error: File '$1' not found!"
+if [ ! -f "$cpp_file" ]; then
+    echo "❌ Error: File '$cpp_file' not found!"
     exit 1
 fi
 
 # Enable verbose mode if specified
-if [[ " $* " == *" --verbose "* ]]; then
+if [ "$verbose_mode" = true ]; then
     set -x  # Enable command tracing
 fi
 
 # Show compiler information
 show_compiler_info
 
-# Compile the program with or without debug flags
-if [[ " $* " == *" --debug "* ]]; then
-    echo "🐞    Debug mode enabled!"
-    g++ $cpp_flag -Wall -Wextra -g -o "$filename" "$1"
+# Compile the program
+if [ "$debug_mode" = true ]; then
+    echo "🐞 Debug mode enabled!"
+    g++ -std=$cpp_standard -Wall -Wextra -g -o "$filename" "$cpp_file"
 else
-    g++ $cpp_flag -Wall -Wextra -o "$filename" "$1"
+    g++ -std=$cpp_standard -Wall -Wextra -o "$filename" "$cpp_file"
 fi
 
 # Check if compilation was successful
 if [ $? -eq 0 ]; then
-    echo "✅    Compilation successful!"
-    echo "🚀    Running $filename..."
-    echo "-----------------------------"
+    echo "✅ Compilation successful!"
+    echo "🚀 Running $filename..."
+    echo "------------------------------------------------------------"
     ./"$filename"
+    echo "------------------------------------------------------------"
 else
-    echo "❌    Compilation failed!"
+    echo "❌ Compilation failed!"
     exit 1
 fi
 
-# Skip cleaning if --no-clean is passed
-if [[ " $* " != *" --no-clean "* ]]; then
-    echo "🧹    Cleaning up..."
+# Skip cleaning if -n (no clean) is passed
+if [ "$no_clean" = false ]; then
+    echo "🧹 Cleaning up..."
     rm "$filename"
 fi
