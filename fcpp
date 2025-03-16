@@ -1,0 +1,157 @@
+#!/bin/bash
+
+# Check if Gum CLI is installed (required for the interactive interface)
+if ! command -v gum &> /dev/null; then
+    echo "Error: Gum CLI is not installed. Please install it first."
+    echo "Visit: https://github.com/charmbracelet/gum"
+    exit 1
+fi
+
+# Function to extract the GCC version
+get_gcc_version() {
+    g++ --version | head -n 1 | awk '{print $4}'
+}
+
+# Function to display compiler information
+show_compiler_info() {
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+    gum style --foreground 39 "🔧    Compiler GCC:"
+    gum style --foreground 45 "🛠️     GCC Version: $(get_gcc_version)"
+    gum style --foreground 51 "📋    C++ Standard Version: $cpp_standard"
+    gum style --foreground 87 "🚩    Compiler Flags: -std=$cpp_standard -Wall -Wextra"
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+}
+
+# Function to select a file interactively
+select_file() {
+    local files=($(find . -maxdepth 1 -type f \( -name "*.cpp" -o -name "*.c" \)))
+    if [ ${#files[@]} -eq 0 ]; then
+        gum style --foreground 196 "❌ No .cpp or .c files found in the current directory."
+        exit 1
+    fi
+
+    gum style --foreground 33 "📂 Select a file to compile:"
+    selected_file=$(gum choose "${files[@]}")
+    echo "$selected_file"
+}
+
+# Function to compile and run the program
+compile_and_run() {
+    local cpp_file=$1
+    local cpp_standard=$2
+    local debug_mode=$3
+    local no_clean=$4
+
+    # Extract the filename without extension
+    local filename=$(basename "$cpp_file" .cpp)
+
+    # Compile the program
+    local compile_args=("-std=$cpp_standard" "-Wall" "-Wextra" "-o" "$filename" "$cpp_file")
+    if [ "$debug_mode" = true ]; then
+        compile_args+=("-g")
+    fi
+
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 51 "🔨 Compiling with standard optimizations..."
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+
+    if g++ "${compile_args[@]}"; then
+        gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+        gum style --foreground 46 "✅ Compilation successful!"
+        gum style --foreground 27 "🚀 Running $filename..."
+        gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+
+        # Program output section
+        gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+        gum style --foreground 39 "📤 Program Output:"
+        gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+        ./"$filename"
+        gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+        gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+    else
+        gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+        gum style --foreground 196 "❌ Compilation failed!"
+        gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+        exit 1
+    fi
+
+    # Clean up the compiled file unless -n is passed
+    if [ "$no_clean" = false ]; then
+        gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+        gum style --foreground 105 "🧹 Cleaning up..."
+        gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+        rm "$filename"
+    else
+        gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+        gum style --foreground 214 "📝 Keeping binary file: $filename"
+        gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+    fi
+}
+
+# Default settings
+cpp_standard="c++20"  # Default C++ standard version
+debug_mode=false      # Debug mode disabled by default
+verbose_mode=false    # Verbose mode disabled by default
+no_clean=false        # Cleanup enabled by default
+
+# Parse command-line options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        # Set C++ standard (only supports c++17 or c++20)
+        -s)
+            if [[ "$2" == "c++17" || "$2" == "c++20" ]]; then
+                cpp_standard="$2"
+                shift 2  # Move past the argument
+            else
+                gum style --foreground 196 "❌ Error: Invalid C++ standard. Use 'c++17' or 'c++20'."
+                exit 1
+            fi
+            ;;
+        # Enable debug mode
+        -d) debug_mode=true; shift ;;
+        # Enable verbose mode (for debugging script execution)
+        -v) verbose_mode=true; shift ;;
+        # Disable cleaning after execution
+        -n) no_clean=true; shift ;;
+        # Handle the input file argument
+        *)
+            if [[ -z "$cpp_file" ]]; then
+                cpp_file="$1"
+                shift
+            else
+                gum style --foreground 196 "❌ Error: Unrecognized option '$1'."
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+# If no file is provided, prompt the user to select one
+if [ -z "$cpp_file" ]; then
+    gum style --foreground 33 "📂 No file provided. Let's find one!"
+    cpp_file=$(select_file)
+fi
+
+# Check if the source file exists
+if [ ! -f "$cpp_file" ]; then
+    gum style --foreground 196 "❌ Error: File '$cpp_file' not found!"
+    exit 1
+fi
+
+# Enable verbose mode if requested
+if [ "$verbose_mode" = true ]; then
+    gum style --foreground 208 "🔍 Verbose mode enabled - tracing commands..."
+    set -x  # Enable command tracing for debugging
+fi
+
+# Display compiler information
+show_compiler_info
+
+# Compile and run the program
+compile_and_run "$cpp_file" "$cpp_standard" "$debug_mode" "$no_clean"
+
+gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+gum style --foreground 46 "✨ All done!"
+gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
