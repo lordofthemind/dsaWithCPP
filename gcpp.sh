@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Check if Gum CLI is installed (required for the interactive interface)
+if ! command -v gum &> /dev/null; then
+    echo "Error: Gum CLI is not installed. Please install it first."
+    echo "Visit: https://github.com/charmbracelet/gum"
+    exit 1
+fi
+
 # Function to extract the GCC version
 get_gcc_version() {
     g++ --version | head -n 1 | awk '{print $4}'
