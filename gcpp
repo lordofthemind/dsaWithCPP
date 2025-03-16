@@ -13,12 +13,14 @@ no_clean=false        # Cleanup enabled by default
 
 # Function to display compiler information
 show_compiler_info() {
-    echo "------------------------------------------------------------"
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     gum style --foreground 39 "🔧    Compiler GCC:"
     gum style --foreground 45 "🛠️     GCC Version: $(get_gcc_version)"
     gum style --foreground 51 "📋    C++ Standard Version: $cpp_standard"
     gum style --foreground 87 "🚩    Compiler Flags: -std=$cpp_standard -Wall -Wextra"
-    echo "------------------------------------------------------------"
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
 }
 
 # Parse command-line options
@@ -88,9 +90,11 @@ fi
 if [ $? -eq 0 ]; then
     gum style --foreground 46 "✅ Compilation successful!"
     gum style --foreground 27 "🚀 Running $filename..."
-    echo "------------------------------------------------------------"
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     ./"$filename"
-    echo "------------------------------------------------------------"
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
 else
     gum style --foreground 196 "❌ Compilation failed!"
     exit 1
