@@ -32,7 +32,9 @@ while [[ $# -gt 0 ]]; do
                 cpp_standard="$2"
                 shift 2  # Move past the argument
             else
+                gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
                 gum style --foreground 196 "❌ Error: Invalid C++ standard. Use 'c++17' or 'c++20'."
+                gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
                 exit 1
             fi
             ;;
@@ -48,7 +50,9 @@ while [[ $# -gt 0 ]]; do
                 cpp_file="$1"
                 shift
             else
+                gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
                 gum style --foreground 196 "❌ Error: Unrecognized option '$1'."
+                gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
                 exit 1
             fi
             ;;
@@ -57,7 +61,9 @@ done
 
 # Ensure a C++ source file is provided
 if [ -z "$cpp_file" ]; then
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
     gum style --foreground 202 "❌ Usage: $0 <cpp_file> [-s c++17|c++20] [-d] [-v] [-n]"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     exit 1
 fi
 
@@ -66,12 +72,17 @@ filename=$(basename "$cpp_file" .cpp)
 
 # Check if the source file exists
 if [ ! -f "$cpp_file" ]; then
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
     gum style --foreground 196 "❌ Error: File '$cpp_file' not found!"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     exit 1
 fi
 
 # Enable verbose mode if requested
 if [ "$verbose_mode" = true ]; then
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 208 "🔍 Verbose mode enabled - tracing commands..."
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     set -x  # Enable command tracing for debugging
 fi
 
@@ -80,28 +91,50 @@ show_compiler_info
 
 # Compile the program with appropriate flags
 if [ "$debug_mode" = true ]; then
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
     gum style --foreground 208 "🐞 Debug mode enabled!"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     g++ -std=$cpp_standard -Wall -Wextra -g -o "$filename" "$cpp_file"
 else
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 51 "🔨 Compiling with standard optimizations..."
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     g++ -std=$cpp_standard -Wall -Wextra -o "$filename" "$cpp_file"
 fi
 
 # Check if compilation was successful
 if [ $? -eq 0 ]; then
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
     gum style --foreground 46 "✅ Compilation successful!"
     gum style --foreground 27 "🚀 Running $filename..."
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+    
+    # Program output section
     gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 39 "📤 Program Output:"
     gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     ./"$filename"
     gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
     gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
 else
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
     gum style --foreground 196 "❌ Compilation failed!"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     exit 1
 fi
 
 # Clean up the compiled file unless -n is passed
 if [ "$no_clean" = false ]; then
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
     gum style --foreground 105 "🧹 Cleaning up..."
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
     rm "$filename"
+    
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 46 "✨ All done!"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+else
+    gum style --foreground 33 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
+    gum style --foreground 214 "📝 Keeping binary file: $filename"
+    gum style --foreground 46 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
 fi
