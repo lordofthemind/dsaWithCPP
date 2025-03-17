@@ -8,12 +8,12 @@
 # ======================================================================
 
 # -------------------- Global Variables --------------------
-quick_mode=false       # Flag to enable quick mode (minimal UI)
-cpp_standard="c++20"   # Default C++ standard version
-debug_mode=false       # Flag to enable debug mode
-verbose_mode=false     # Flag to enable verbose mode
-no_clean=false         # Flag to disable cleanup after execution
-cpp_file=""            # Path to the C++ file to compile
+use_gum=false         # Flag to enable/disable Gum (default: false)
+cpp_standard="c++20"  # Default C++ standard version
+debug_mode=false      # Flag to enable debug mode
+verbose_mode=false    # Flag to enable verbose mode
+no_clean=false        # Flag to disable cleanup after execution
+cpp_file=""           # Path to the C++ file to compile
 
 # -------------------- Helper Functions --------------------
 
@@ -30,15 +30,15 @@ show_help() {
     echo "  -d               Enable debug mode (adds -g flag to compilation)"
     echo "  -v               Enable verbose mode (shows commands being executed)"
     echo "  -n               Do not clean up binary after execution"
-    echo "  -q               Enable quick mode (minimal UI, no Gum dependency)"
+    echo "  -g               Enable Gum for interactive file selection"
     echo
     echo "EXAMPLES:"
-    echo "  $(basename "$0")                     # Interactive file selection"
     echo "  $(basename "$0") main.cpp            # Compile and run main.cpp"
     echo "  $(basename "$0") -s c++17 main.cpp   # Use C++17 standard"
     echo "  $(basename "$0") -d -n main.cpp      # Debug mode, keep binary"
+    echo "  $(basename "$0") -g                  # Use Gum to select a file interactively"
     echo
-    echo "NOTE: Without Gum CLI installed, use -q flag for quick mode."
+    echo "NOTE: If -g is not passed, the file path must be provided as an argument."
     exit 0
 }
 
@@ -49,11 +49,15 @@ get_gcc_version() {
 
 # Print a formatted line (top and bottom borders)
 print_line() {
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         terminal_width=$(tput cols)
         line_width=$((terminal_width * 99 / 100))
         gum style --foreground $1 "$(gum join --horizontal $(printf "▁%.0s" $(seq 1 $line_width)))"
         gum style --foreground $2 "$(gum join --horizontal $(printf "▔%.0s" $(seq 1 $line_width)))"
+    else
+        terminal_width=$(tput cols)
+        line_width=$((terminal_width * 99 / 100))
+        echo "$(printf "=%.0s" $(seq 1 $line_width))"
     fi
 }
 
@@ -62,7 +66,7 @@ print_message() {
     local color=$1
     local message=$2
     
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_line 33 46
         gum style --foreground $color "$message"
         print_line 33 46
@@ -73,7 +77,7 @@ print_message() {
 
 # Display error message and exit
 show_error() {
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_message 196 "❌ Error: $1"
     else
         echo "Error: $1"
@@ -83,23 +87,28 @@ show_error() {
 
 # Display compiler information
 show_compiler_info() {
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_line 33 46
         gum style --foreground 39 "🔧    Compiler GCC:"
         gum style --foreground 45 "🛠️     GCC Version: $(get_gcc_version)"
         gum style --foreground 51 "📋    C++ Standard Version: $cpp_standard"
         gum style --foreground 87 "🚩    Compiler Flags: -std=$cpp_standard -Wall -Wextra"
         print_line 33 46
+    else
+        echo "Compiler: GCC"
+        echo "GCC Version: $(get_gcc_version)"
+        echo "C++ Standard Version: $cpp_standard"
+        echo "Compiler Flags: -std=$cpp_standard -Wall -Wextra"
     fi
 }
 
 # Display usage information
 show_usage() {
-    if [ "$quick_mode" = false ]; then
-        print_message 202 "❌ Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-q] [-h]"
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
+        print_message 202 "❌ Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-g] [-h]"
         print_message 202 "Run '$(basename "$0") -h' for more information."
     else
-        echo "Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-q] [-h]"
+        echo "Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-g] [-h]"
         echo "Run '$(basename "$0") -h' for more information."
     fi
     exit 1
@@ -150,8 +159,8 @@ while [[ $# -gt 0 ]]; do
         -v) verbose_mode=true; shift ;;
         # Disable cleaning after execution
         -n) no_clean=true; shift ;;
-        # Enable quick mode (skip UI)
-        -q) quick_mode=true; shift ;;
+        # Enable Gum (interactive file selection)
+        -g) use_gum=true; shift ;;
         # Handle the input file argument
         *)
             if [[ -z "$cpp_file" ]]; then
@@ -164,18 +173,15 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check if Gum CLI is installed (only needed if not in quick mode)
-if [ "$quick_mode" = false ] && ! command -v gum &> /dev/null; then
-    echo "Error: Gum CLI is not installed. Please install it first."
-    echo "Visit: https://github.com/charmbracelet/gum"
-    echo "You can use -q flag to run in quick mode without Gum."
-    exit 1
+# If -g is not passed, the file path must be provided as an argument
+if [ "$use_gum" = false ] && [ -z "$cpp_file" ]; then
+    show_error "File path must be provided as an argument when -g is not used."
 fi
 
-# If no C++ file was provided as an argument, prompt the user to select one
-if [ -z "$cpp_file" ]; then
+# If -g is passed, allow interactive file selection
+if [ "$use_gum" = true ] && [ -z "$cpp_file" ]; then
     if ! command -v gum &> /dev/null; then
-        show_error "No file provided and Gum is not installed for interactive selection."
+        show_error "Gum is not installed. Please install Gum or provide the file path as an argument."
     fi
     cpp_file=$(select_cpp_file)
 fi
@@ -200,7 +206,7 @@ current_dir=$(pwd)
 # Check if the output binary name would conflict with an existing directory
 if [ -d "$current_dir/$filename" ]; then
     binary_path="$current_dir/${filename}_bin"
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_message 208 "⚠️ Directory '$filename' exists. Using '${filename}_bin' as output name."
     else
         echo "Warning: Directory '$filename' exists. Using '${filename}_bin' as output name."
@@ -224,7 +230,7 @@ if [ "$debug_mode" = true ]; then
     print_message 208 "🐞 Debug mode enabled!"
     compile_cmd+=" -g"
 else
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_message 51 "🔨 Compiling with standard optimizations..."
     fi
 fi
@@ -237,7 +243,7 @@ eval $compile_cmd
 
 # Check if compilation was successful
 if [ $? -eq 0 ]; then
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_message 46 "✅ Compilation successful!"
         gum style --foreground 27 "🚀 Running $filename..."
         print_line 33 46
@@ -250,9 +256,9 @@ if [ $? -eq 0 ]; then
         terminal_width=$(tput cols)
         line_width=$((terminal_width * 99 / 100))
         echo "Compilation successful. Running $filename..."
-        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
+        echo "$(printf "=%.0s" $(seq 1 $line_width))"
         echo "Program Output:"
-        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
+        echo "$(printf "=%.0s" $(seq 1 $line_width))"
     fi
     
     # Change directory to the location of the compiled binary before running
@@ -262,12 +268,12 @@ if [ $? -eq 0 ]; then
     "$binary_path"
     run_status=$?
     
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_line 33 46
     else
         terminal_width=$(tput cols)
         line_width=$((terminal_width * 99 / 100))
-        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
+        echo "$(printf "=%.0s" $(seq 1 $line_width))"
     fi
     
     # If the program didn't exit successfully, show the error code
@@ -280,17 +286,19 @@ fi
 
 # Clean up the compiled file unless -n is passed
 if [ "$no_clean" = false ]; then
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_message 105 "🧹 Cleaning up..."
+    else
+        echo "Cleaning up..."
     fi
     rm "$binary_path"
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_message 46 "✨ All done!"
     else
         echo "Cleaned up. All done!"
     fi
 else
-    if [ "$quick_mode" = false ]; then
+    if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_message 214 "📝 Keeping binary file: $binary_path"
         print_message 46 "✨ All done!"
     else
