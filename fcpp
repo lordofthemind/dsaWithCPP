@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ======================================================================
-# fcpp - Fast C++ Compiler and Runner
+# fcr - Fast C++ Compiler and Runner
 # 
 # This script compiles and runs C++ files with sensible defaults.
 # It supports interactive file selection, debug mode, and more.
@@ -19,7 +19,7 @@ cpp_file=""            # Path to the C++ file to compile
 
 # Display help information
 show_help() {
-    echo "Fast C++ Compiler and Runner (fcpp)"
+    echo "Fast C++ Compiler and Runner (fcr)"
     echo
     echo "USAGE:"
     echo "  $(basename "$0") [options] [cpp_file]"
