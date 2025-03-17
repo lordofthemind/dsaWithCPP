@@ -65,11 +65,11 @@ show_usage() {
 
 # Function to select a C++ file interactively
 select_cpp_file() {
-    if [ "$quick_mode" = false ]; then
-        print_message 39 "📂 Please select a C++ file to compile:"
-    else
-        echo "Please select a C++ file to compile:"
-    fi
+    # if [ "$quick_mode" = false ]; then
+    #     print_message 39 "📂 Please select a C++ file to compile:"
+    # else
+    #     echo "Please select a C++ file to compile:"
+    # fi
     
     # Find all .cpp files in the current directory
     files=$(find . -maxdepth 1 -name "*.cpp" -type f | sort | sed 's|^\./||')
@@ -78,7 +78,7 @@ select_cpp_file() {
     if [ -z "$files" ]; then
         show_error "No C++ files found in the current directory."
     fi
-    
+
     # Use gum filter to let the user select a file
     selected_file=$(echo "$files" | gum filter --placeholder "Type to filter and select a C++ file..." --indicator "➤" --indicator.foreground 212)
     
@@ -145,13 +145,13 @@ if [ -z "$cpp_file" ]; then
     cpp_file=$(select_cpp_file)
 fi
 
-# Extract the filename without extension
-filename=$(basename "$cpp_file" .cpp)
-
 # Check if the source file exists
 if [ ! -f "$cpp_file" ]; then
     show_error "File '$cpp_file' not found!"
 fi
+
+# Extract the filename without extension
+filename=$(basename "$cpp_file" .cpp)
 
 # Enable verbose mode if requested
 if [ "$verbose_mode" = true ]; then
