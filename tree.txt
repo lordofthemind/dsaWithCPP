@@ -1,0 +1,11 @@
+.
+├── 001pointer.cpp
+├── cpp_version_check.cpp
+├── fcr
+├── gum_check.cpp
+├── main.cpp
+├── student_management_system.cpp
+├── thread_pool_scheduler.cpp
+└── tree.txt
+
+1 directory, 8 files
