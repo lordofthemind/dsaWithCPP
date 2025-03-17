@@ -1,14 +1,53 @@
 #!/bin/bash
 
-# Quick mode flag
-quick_mode=false
+# ======================================================================
+# fcpp - Fast C++ Compiler and Runner
+# 
+# This script compiles and runs C++ files with sensible defaults.
+# It supports interactive file selection, debug mode, and more.
+# ======================================================================
 
-# Function to extract the GCC version
+# -------------------- Global Variables --------------------
+quick_mode=false       # Flag to enable quick mode (minimal UI)
+cpp_standard="c++20"   # Default C++ standard version
+debug_mode=false       # Flag to enable debug mode
+verbose_mode=false     # Flag to enable verbose mode
+no_clean=false         # Flag to disable cleanup after execution
+cpp_file=""            # Path to the C++ file to compile
+
+# -------------------- Helper Functions --------------------
+
+# Display help information
+show_help() {
+    echo "Fast C++ Compiler and Runner (fcpp)"
+    echo
+    echo "USAGE:"
+    echo "  $(basename "$0") [options] [cpp_file]"
+    echo
+    echo "OPTIONS:"
+    echo "  -h, --help       Show this help message and exit"
+    echo "  -s <standard>    Set C++ standard (c++17 or c++20, default: c++20)"
+    echo "  -d               Enable debug mode (adds -g flag to compilation)"
+    echo "  -v               Enable verbose mode (shows commands being executed)"
+    echo "  -n               Do not clean up binary after execution"
+    echo "  -q               Enable quick mode (minimal UI, no Gum dependency)"
+    echo
+    echo "EXAMPLES:"
+    echo "  $(basename "$0")                     # Interactive file selection"
+    echo "  $(basename "$0") main.cpp            # Compile and run main.cpp"
+    echo "  $(basename "$0") -s c++17 main.cpp   # Use C++17 standard"
+    echo "  $(basename "$0") -d -n main.cpp      # Debug mode, keep binary"
+    echo
+    echo "NOTE: Without Gum CLI installed, use -q flag for quick mode."
+    exit 0
+}
+
+# Extract the GCC version from compiler output
 get_gcc_version() {
     g++ --version | head -n 1 | awk '{print $4}'
 }
 
-# Function to print a formatted line
+# Print a formatted line (top and bottom borders)
 print_line() {
     if [ "$quick_mode" = false ]; then
         terminal_width=$(tput cols)
@@ -18,7 +57,7 @@ print_line() {
     fi
 }
 
-# Function to display styled message
+# Display a styled message with borders
 print_message() {
     local color=$1
     local message=$2
@@ -32,7 +71,7 @@ print_message() {
     fi
 }
 
-# Function to display error and exit
+# Display error message and exit
 show_error() {
     if [ "$quick_mode" = false ]; then
         print_message 196 "❌ Error: $1"
@@ -42,7 +81,7 @@ show_error() {
     exit 1
 }
 
-# Function to display compiler information
+# Display compiler information
 show_compiler_info() {
     if [ "$quick_mode" = false ]; then
         print_line 33 46
@@ -54,16 +93,19 @@ show_compiler_info() {
     fi
 }
 
-# Function to show usage information
+# Display usage information
 show_usage() {
     if [ "$quick_mode" = false ]; then
-        print_message 202 "❌ Usage: $0 <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-q]"
+        print_message 202 "❌ Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-q] [-h]"
+        print_message 202 "Run '$(basename "$0") -h' for more information."
     else
-        echo "Usage: $0 <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-q]"
+        echo "Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-q] [-h]"
+        echo "Run '$(basename "$0") -h' for more information."
     fi
+    exit 1
 }
 
-# Function to select a C++ file interactively - now with recursive search
+# Interactive file selection using Gum
 select_cpp_file() {
     # Find all .cpp files recursively in the current directory and subdirectories
     files=$(find . -name "*.cpp" -type f | sort | sed 's|^\./||')
@@ -84,16 +126,15 @@ select_cpp_file() {
     echo "$selected_file"
 }
 
-# Default settings
-cpp_standard="c++20"  # Default C++ standard version
-debug_mode=false      # Debug mode disabled by default
-verbose_mode=false    # Verbose mode disabled by default
-no_clean=false        # Cleanup enabled by default
-cpp_file=""           # Initialize cpp_file variable
+# -------------------- Main Script --------------------
 
 # Parse command-line options
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        # Show help
+        -h|--help)
+            show_help
+            ;;
         # Set C++ standard (only supports c++17 or c++20)
         -s)
             if [[ "$2" == "c++17" || "$2" == "c++20" ]]; then
@@ -156,6 +197,18 @@ source_dir=$(dirname "$cpp_file_abs")
 # Store the current directory
 current_dir=$(pwd)
 
+# Check if the output binary name would conflict with an existing directory
+if [ -d "$current_dir/$filename" ]; then
+    binary_path="$current_dir/${filename}_bin"
+    if [ "$quick_mode" = false ]; then
+        print_message 208 "⚠️ Directory '$filename' exists. Using '${filename}_bin' as output name."
+    else
+        echo "Warning: Directory '$filename' exists. Using '${filename}_bin' as output name."
+    fi
+else
+    binary_path="$current_dir/$filename"
+fi
+
 # Enable verbose mode if requested
 if [ "$verbose_mode" = true ]; then
     print_message 208 "🔍 Verbose mode enabled - tracing commands..."
@@ -176,8 +229,7 @@ else
     fi
 fi
 
-# Create the output binary in the current directory
-binary_path="$current_dir/$filename"
+# Add output filepath to compile command
 compile_cmd+=" -o \"$binary_path\" \"$cpp_file_abs\""
 
 # Compile the program
