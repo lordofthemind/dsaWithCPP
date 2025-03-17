@@ -78,7 +78,7 @@ print_message() {
 # Display error message and exit
 show_error() {
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
-        print_message 196 "❌ Error: $1"
+        print_message 196 "❌    Error: $1"
     else
         echo "Error: $1"
     fi
@@ -89,7 +89,7 @@ show_error() {
 show_compiler_info() {
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
         print_line 33 46
-        gum style --foreground 39 "🔧    Compiler GCC:"
+        gum style --foreground 39 "🔧    Compiler: GCC"
         gum style --foreground 45 "🛠️     GCC Version: $(get_gcc_version)"
         gum style --foreground 51 "📋    C++ Standard Version: $cpp_standard"
         gum style --foreground 87 "🚩    Compiler Flags: -std=$cpp_standard -Wall -Wextra"
@@ -105,7 +105,7 @@ show_compiler_info() {
 # Display usage information
 show_usage() {
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
-        print_message 202 "❌ Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-g] [-h]"
+        print_message 202 "❌    Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-g] [-h]"
         print_message 202 "Run '$(basename "$0") -h' for more information."
     else
         echo "Usage: $(basename "$0") <cpp_file> [-s c++17|c++20] [-d] [-v] [-n] [-g] [-h]"
@@ -125,7 +125,7 @@ select_cpp_file() {
     fi
 
     # Use gum filter to let the user select a file
-    selected_file=$(echo "$files" | gum filter --placeholder "📂 Type to filter and select a C++ file to compile..." --indicator "➤" --indicator.foreground 212)
+    selected_file=$(echo "$files" | gum filter --placeholder "📂    Type to filter and select a C++ file to compile..." --indicator "➤" --indicator.foreground 212)
     
     # Check if a file was selected
     if [ -z "$selected_file" ]; then
@@ -207,7 +207,7 @@ current_dir=$(pwd)
 if [ -d "$current_dir/$filename" ]; then
     binary_path="$current_dir/${filename}_bin"
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
-        print_message 208 "⚠️ Directory '$filename' exists. Using '${filename}_bin' as output name."
+        print_message 208 "⚠️    Directory '$filename' exists. Using '${filename}_bin' as output name."
     else
         echo "Warning: Directory '$filename' exists. Using '${filename}_bin' as output name."
     fi
@@ -217,7 +217,7 @@ fi
 
 # Enable verbose mode if requested
 if [ "$verbose_mode" = true ]; then
-    print_message 208 "🔍 Verbose mode enabled - tracing commands..."
+    print_message 208 "🔍    Verbose mode enabled - tracing commands..."
     set -x  # Enable command tracing for debugging
 fi
 
@@ -227,11 +227,11 @@ show_compiler_info
 # Prepare compile command - compiled binary goes to current directory
 compile_cmd="g++ -std=$cpp_standard -Wall -Wextra"
 if [ "$debug_mode" = true ]; then
-    print_message 208 "🐞 Debug mode enabled!"
+    print_message 208 "🐞    Debug mode enabled!"
     compile_cmd+=" -g"
 else
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
-        print_message 51 "🔨 Compiling with standard optimizations..."
+        print_message 51 "🔨    Compiling with standard optimizations..."
     fi
 fi
 
@@ -244,13 +244,13 @@ eval $compile_cmd
 # Check if compilation was successful
 if [ $? -eq 0 ]; then
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
-        print_message 46 "✅ Compilation successful!"
-        gum style --foreground 27 "🚀 Running $filename..."
+        print_message 46 "✅    Compilation successful!"
+        gum style --foreground 27 "🚀    Running $filename..."
         print_line 33 46
         
         # Program output section
         print_line 33 46
-        gum style --foreground 39 "📤 Program Output:"
+        gum style --foreground 39 "📤    Program Output:"
         print_line 33 46
     else
         terminal_width=$(tput cols)
@@ -278,7 +278,7 @@ if [ $? -eq 0 ]; then
     
     # If the program didn't exit successfully, show the error code
     if [ $run_status -ne 0 ]; then
-        print_message 196 "⚠️ Program exited with code $run_status"
+        print_message 196 "⚠️    Program exited with code $run_status"
     fi
 else
     show_error "Compilation failed!"
@@ -287,20 +287,20 @@ fi
 # Clean up the compiled file unless -n is passed
 if [ "$no_clean" = false ]; then
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
-        print_message 105 "🧹 Cleaning up..."
+        print_message 105 "🧹    Cleaning up..."
     else
         echo "Cleaning up..."
     fi
     rm "$binary_path"
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
-        print_message 46 "✨ All done!"
+        print_message 46 "✨    All done!"
     else
         echo "Cleaned up. All done!"
     fi
 else
     if [ "$use_gum" = true ] && command -v gum &> /dev/null; then
-        print_message 214 "📝 Keeping binary file: $binary_path"
-        print_message 46 "✨ All done!"
+        print_message 214 "📝    Keeping binary file: $binary_path"
+        print_message 46 "✨    All done!"
     else
         echo "Keeping binary file: $binary_path"
         echo "All done!"
