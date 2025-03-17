@@ -65,12 +65,6 @@ show_usage() {
 
 # Function to select a C++ file interactively
 select_cpp_file() {
-    # if [ "$quick_mode" = false ]; then
-    #     print_message 39 "📂 Please select a C++ file to compile:"
-    # else
-    #     echo "Please select a C++ file to compile:"
-    # fi
-    
     # Find all .cpp files in the current directory
     files=$(find . -maxdepth 1 -name "*.cpp" -type f | sort | sed 's|^\./||')
     
@@ -80,7 +74,7 @@ select_cpp_file() {
     fi
 
     # Use gum filter to let the user select a file
-    selected_file=$(echo "$files" | gum filter --placeholder "Type to filter and select a C++ file..." --indicator "➤" --indicator.foreground 212)
+    selected_file=$(echo "$files" | gum filter --placeholder "📂 Type to filter and select a C++ file to compile..." --indicator "➤" --indicator.foreground 212)
     
     # Check if a file was selected
     if [ -z "$selected_file" ]; then
