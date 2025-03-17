@@ -57,7 +57,7 @@ print_line() {
     else
         terminal_width=$(tput cols)
         line_width=$((terminal_width * 99 / 100))
-        echo "$(printf "=%.0s" $(seq 1 $line_width))"
+        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
     fi
 }
 
@@ -256,9 +256,9 @@ if [ $? -eq 0 ]; then
         terminal_width=$(tput cols)
         line_width=$((terminal_width * 99 / 100))
         echo "Compilation successful. Running $filename..."
-        echo "$(printf "=%.0s" $(seq 1 $line_width))"
+        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
         echo "Program Output:"
-        echo "$(printf "=%.0s" $(seq 1 $line_width))"
+        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
     fi
     
     # Change directory to the location of the compiled binary before running
@@ -273,7 +273,7 @@ if [ $? -eq 0 ]; then
     else
         terminal_width=$(tput cols)
         line_width=$((terminal_width * 99 / 100))
-        echo "$(printf "=%.0s" $(seq 1 $line_width))"
+        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
     fi
     
     # If the program didn't exit successfully, show the error code
