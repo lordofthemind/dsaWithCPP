@@ -11,8 +11,10 @@ get_gcc_version() {
 # Function to print a formatted line
 print_line() {
     if [ "$quick_mode" = false ]; then
-        gum style --foreground $1 "$(gum join --horizontal $(printf "▁%.0s" {1..80}))"
-        gum style --foreground $2 "$(gum join --horizontal $(printf "▔%.0s" {1..80}))"
+        terminal_width=$(tput cols)
+        line_width=$((terminal_width * 90 / 100))
+        gum style --foreground $1 "$(gum join --horizontal $(printf "▁%.0s" $(seq 1 $line_width)))"
+        gum style --foreground $2 "$(gum join --horizontal $(printf "▔%.0s" $(seq 1 $line_width)))"
     fi
 }
 
@@ -157,10 +159,12 @@ if [ $? -eq 0 ]; then
         gum style --foreground 39 "📤 Program Output:"
         print_line 33 46
     else
+        terminal_width=$(tput cols)
+        line_width=$((terminal_width * 90 / 100))
         echo "Compilation successful. Running $filename..."
-        echo "-----------------------------------"
+        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
         echo "Program Output:"
-        echo "-----------------------------------"
+        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
     fi
     
     # Run the program
@@ -169,7 +173,9 @@ if [ $? -eq 0 ]; then
     if [ "$quick_mode" = false ]; then
         print_line 33 46
     else
-        echo "-----------------------------------"
+        terminal_width=$(tput cols)
+        line_width=$((terminal_width * 90 / 100))
+        echo "$(printf "▔%.0s" $(seq 1 $line_width))"
     fi
 else
     show_error "Compilation failed!"
@@ -195,3 +201,4 @@ else
         echo "All done!"
     fi
 fi
+
