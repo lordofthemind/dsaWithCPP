@@ -12,7 +12,7 @@ get_gcc_version() {
 print_line() {
     if [ "$quick_mode" = false ]; then
         terminal_width=$(tput cols)
-        line_width=$((terminal_width * 90 / 100))
+        line_width=$((terminal_width * 99 / 100))
         gum style --foreground $1 "$(gum join --horizontal $(printf "▁%.0s" $(seq 1 $line_width)))"
         gum style --foreground $2 "$(gum join --horizontal $(printf "▔%.0s" $(seq 1 $line_width)))"
     fi
@@ -160,7 +160,7 @@ if [ $? -eq 0 ]; then
         print_line 33 46
     else
         terminal_width=$(tput cols)
-        line_width=$((terminal_width * 90 / 100))
+        line_width=$((terminal_width * 99 / 100))
         echo "Compilation successful. Running $filename..."
         echo "$(printf "▔%.0s" $(seq 1 $line_width))"
         echo "Program Output:"
@@ -174,7 +174,7 @@ if [ $? -eq 0 ]; then
         print_line 33 46
     else
         terminal_width=$(tput cols)
-        line_width=$((terminal_width * 90 / 100))
+        line_width=$((terminal_width * 99 / 100))
         echo "$(printf "▔%.0s" $(seq 1 $line_width))"
     fi
 else
