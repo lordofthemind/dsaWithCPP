@@ -144,9 +144,17 @@ if [ ! -f "$cpp_file" ]; then
     show_error "File '$cpp_file' not found!"
 fi
 
-# Extract the filename without extension and handle path components
+# Get absolute path of the source file
+cpp_file_abs=$(realpath "$cpp_file")
+
+# Extract the filename without extension for the output binary
 filename=$(basename "$cpp_file" .cpp)
-filepath=$(dirname "$cpp_file")
+
+# Get the directory of the source file
+source_dir=$(dirname "$cpp_file_abs")
+
+# Store the current directory
+current_dir=$(pwd)
 
 # Enable verbose mode if requested
 if [ "$verbose_mode" = true ]; then
@@ -167,7 +175,10 @@ else
         print_message 51 "🔨 Compiling with standard optimizations..."
     fi
 fi
-compile_cmd+=" -o \"$filename\" \"$cpp_file\""
+
+# Create the output binary in the current directory
+binary_path="$current_dir/$filename"
+compile_cmd+=" -o \"$binary_path\" \"$cpp_file_abs\""
 
 # Compile the program
 eval $compile_cmd
@@ -192,8 +203,12 @@ if [ $? -eq 0 ]; then
         echo "$(printf "▔%.0s" $(seq 1 $line_width))"
     fi
     
-    # Run the program
-    ./"$filename"
+    # Change directory to the location of the compiled binary before running
+    cd "$current_dir"
+    
+    # Run the program with explicit path
+    "$binary_path"
+    run_status=$?
     
     if [ "$quick_mode" = false ]; then
         print_line 33 46
@@ -201,6 +216,11 @@ if [ $? -eq 0 ]; then
         terminal_width=$(tput cols)
         line_width=$((terminal_width * 99 / 100))
         echo "$(printf "▔%.0s" $(seq 1 $line_width))"
+    fi
+    
+    # If the program didn't exit successfully, show the error code
+    if [ $run_status -ne 0 ]; then
+        print_message 196 "⚠️ Program exited with code $run_status"
     fi
 else
     show_error "Compilation failed!"
@@ -211,7 +231,7 @@ if [ "$no_clean" = false ]; then
     if [ "$quick_mode" = false ]; then
         print_message 105 "🧹 Cleaning up..."
     fi
-    rm "$filename"
+    rm "$binary_path"
     if [ "$quick_mode" = false ]; then
         print_message 46 "✨ All done!"
     else
@@ -219,10 +239,10 @@ if [ "$no_clean" = false ]; then
     fi
 else
     if [ "$quick_mode" = false ]; then
-        print_message 214 "📝 Keeping binary file: $filename"
+        print_message 214 "📝 Keeping binary file: $binary_path"
         print_message 46 "✨ All done!"
     else
-        echo "Keeping binary file: $filename"
+        echo "Keeping binary file: $binary_path"
         echo "All done!"
     fi
 fi
