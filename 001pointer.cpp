@@ -9,3 +9,8 @@ int main()
     cout << "a=" << *ptr << endl;
     return 0;
 }
+
+// null pointer
+// void pointer
+// wild pointer
+// dangling pointer
